@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
+  "scripts": {
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev:backend": "npm --workspace backend run dev",
+    "build:frontend": "npm --workspace frontend run build",
+    "build:backend": "npm --workspace backend run build",
+    "test": "npm test --workspaces",
+    "test:backend-health": "node --env-file=.env.local scripts/test-backend-proxy.mjs",
+    "test:llm": "node --env-file=.env.local scripts/test-llm-connect.mjs",
+    "calibrate:purple-seeds": "npx tsx scripts/calibrate-purple-seeds.ts",
+    "env:docker": "node scripts/sync-env-for-docker.mjs",
+    "db:create-key": "npm --workspace backend run db:create-key"
+  },
+  "overrides": {
+    "postcss": "^8.5.15",
+    "next": {
+      "postcss": "^8.5.15"
+    }
+  }
+}

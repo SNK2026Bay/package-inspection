@@ -1,0 +1,72 @@
+# Run without installing Node: install Docker Desktop, create a `.env` file
+# (see `.env.example`), then: docker compose up --build
+#
+# Open http://localhost:3000
+#
+# SOP folder in Docker: mount the host folder read-only on the backend service and set
+# SOP_SCAN_DIRECTORY to the path inside the container, e.g.:
+#   volumes: ["C:/path/to/SOPs:/sops:ro"]
+#   SOP_SCAN_DIRECTORY=/sops
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: inspect
+      POSTGRES_PASSWORD: inspect
+      POSTGRES_DB: conformance_inspection
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inspect -d conformance_inspection"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    expose:
+      - "4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://inspect:inspect@postgres:5432/conformance_inspection
+      MYGENASSIST_API_KEY: ${MYGENASSIST_API_KEY:-}
+      MYGENASSIST_API_BASE_URL: ${MYGENASSIST_API_BASE_URL:-}
+      MYGENASSIST_MODEL: ${MYGENASSIST_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      INSPECT_LLM_MODEL: ${INSPECT_LLM_MODEL:-}
+      SMARTSHEET_FORM_URL: ${SMARTSHEET_FORM_URL:-}
+      SMARTSHEET_PREFILL_KEYS_JSON: ${SMARTSHEET_PREFILL_KEYS_JSON:-}
+      SOP_SCAN_DIRECTORY: ${SOP_SCAN_DIRECTORY:-}
+      INSPECT_PDF_MAX_MB: ${INSPECT_PDF_MAX_MB:-}
+      BACKEND_API_KEY: ${BACKEND_API_KEY:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      MYGENASSIST_HTTPS_PROXY: ${MYGENASSIST_HTTPS_PROXY:-}
+      NO_PROXY: ${NO_PROXY:-}
+      NODE_EXTRA_CA_CERTS: ${NODE_EXTRA_CA_CERTS:-}
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        BACKEND_ORIGIN: http://backend:4000
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_ORIGIN: http://backend:4000
+      BACKEND_API_KEY: ${BACKEND_API_KEY:-}
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

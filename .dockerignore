@@ -1,0 +1,21 @@
+# dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# next.js
+.next
+out
+
+# git / env / IDE
+.git
+.gitignore
+.env
+.env*.local
+*.md
+
+# docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
